@@ -40,6 +40,8 @@ namespace RabbitMQ.publisher
                 channel.BasicPublish("logs-headers", routeKey, null, messageBody);
                 Console.WriteLine($"log gönderilmiştir {message}");
             });
+
+            Console.ReadLine();
         }
     }
 }
