@@ -1,5 +1,6 @@
 ﻿using RabbitMQ.Client;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -14,6 +15,8 @@ namespace RabbitMQ.publisher
     }
     class Program
     {
+        //route'lama ile ilgili bilgileri ilgili mesajın route'unda değil, header'ında gönderiyoruz.
+            //producer mesaj yollarken header'ında key-value şeklinde route'lama bilgilerini gönderiyor.
         static void Main(string[] args)
         {
             var factory = new ConnectionFactory();
@@ -23,23 +26,19 @@ namespace RabbitMQ.publisher
 
             var channel = connection.CreateModel();
 
-            channel.ExchangeDeclare("logs-headers", durable:true, type: ExchangeType.Headers);
+            channel.ExchangeDeclare("header-exchange", durable:true, type: ExchangeType.Headers);
 
-            Random rnd = new Random();
+            Dictionary<string, object> headers = new Dictionary<string, object>();
 
-            Enumerable.Range(1, 100).ToList().ForEach(x =>
-            {
-                LogNames log1 = (LogNames)rnd.Next(1, 5);
-                LogNames log2 = (LogNames)rnd.Next(1, 5);
-                LogNames log3 = (LogNames)rnd.Next(1, 5);
-                var routeKey = $"{log1}.{log2}.{log3}";
+            headers.Add("format", "pdf");
+            headers.Add("shape", "a4");
 
-                var message = $"log-type: {log1}-{log2}-{log3}";
-                var messageBody = Encoding.UTF8.GetBytes(message);
+            var properties = channel.CreateBasicProperties();
+            properties.Headers = headers;
 
-                channel.BasicPublish("logs-headers", routeKey, null, messageBody);
-                Console.WriteLine($"log gönderilmiştir {message}");
-            });
+            channel.BasicPublish("header-exchange", string.Empty, properties, Encoding.UTF8.GetBytes("header mesajım"));
+
+            Console.WriteLine("Mesaj Gönderilmiştir");
 
             Console.ReadLine();
         }
