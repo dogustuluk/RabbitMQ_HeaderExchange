@@ -1,6 +1,7 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
@@ -16,7 +17,7 @@ namespace RabbitMQ.subscriber
             using var connection = factory.CreateConnection();
 
             var channel = connection.CreateModel();
-            channel.ExchangeDeclare("logs-headers", durable: true, type: ExchangeType.Headers);
+            channel.ExchangeDeclare("header-exchange", durable: true, type: ExchangeType.Headers);
 
             channel.BasicQos(0, 1, false);
 
@@ -24,8 +25,15 @@ namespace RabbitMQ.subscriber
 
             var queueName = channel.QueueDeclare().QueueName;
 
-            var routeKey = "*.Error.*";
-            channel.QueueBind(queueName, "logs-headers", routeKey);
+            Dictionary<string, object> headers = new Dictionary<string, object>();
+
+            headers.Add("format", "pdf");
+            headers.Add("shape", "a4");
+            headers.Add("x-match", "all"); //x-match yapısı
+            //all >>>> ifade "all" ise publish edilen ile subscribe'daki headerlardaki key-value birebir aynısı olmalıdır.
+            //any >>>> ifade "any" ise publishteki ile subscribe'taki header'lardan herhangi biri farklı olsa dahi mesaj gönderilir.
+
+            channel.QueueBind(queueName, "header-exchange", string.Empty, headers);
 
             channel.BasicConsume(queueName, false, consumer);
 
