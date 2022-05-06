@@ -1,8 +1,10 @@
 ﻿using RabbitMQ.Client;
+using Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace RabbitMQ.publisher
 {
@@ -37,7 +39,12 @@ namespace RabbitMQ.publisher
             properties.Headers = headers;
             properties.Persistent = true; //persistent'i true'ya set ederek mesajları kalıcı hale getirmiş olduk. Bunu yapabilmek için bir properties oluşturmamız gereklidir.
 
-            channel.BasicPublish("header-exchange", string.Empty, properties, Encoding.UTF8.GetBytes("header mesajım"));
+            var product = new Product { Id = 1, Name = "Conklin Herringbone", Price = 1500, Stock = 5 };
+
+            var productJsonString = JsonSerializer.Serialize(product);
+
+
+            channel.BasicPublish("header-exchange", string.Empty, properties, Encoding.UTF8.GetBytes(productJsonString/*"header mesajım"*/));
 
             Console.WriteLine("Mesaj Gönderilmiştir");
 
